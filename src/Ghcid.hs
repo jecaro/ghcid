@@ -59,6 +59,7 @@ data Options = Options
     ,restart :: [FilePath]
     ,directory :: FilePath
     ,outputfile :: [FilePath]
+    ,outputfile_header :: String
     ,ignoreLoaded :: Bool
     ,poll :: Maybe Seconds
     ,max_messages :: Maybe Int
@@ -98,6 +99,7 @@ options = cmdArgsMode $ Options
     ,reload = [] &= typ "PATH" &= help "Reload when the given file or directory contents change (defaults to none)"
     ,directory = "." &= typDir &= name "C" &= help "Set the current directory"
     ,outputfile = [] &= typFile &= name "o" &= help "File to write the full output to"
+    ,outputfile_header = [] &= typ "HEADER" &= name "H" &= help "Header to write to the output file (defaults to nothing)"
     ,ignoreLoaded = False &= explicit &= name "ignore-loaded" &= help "Keep going if no files are loaded. Requires --reload to be set."
     ,poll = Nothing &= typ "SECONDS" &= opt "0.1" &= explicit &= name "poll" &= help "Use polling every N seconds (defaults to using notifiers)"
     ,max_messages = Nothing &= name "n" &= help "Maximum number of messages to print"
@@ -384,7 +386,7 @@ runGhcid session waiter termSize termOutput opts@Options{..} = do
                     if takeExtension file == ".json" then
                         showJSON [("loaded",map jString loaded),("messages",map jMessage $ filter isMessage messages)]
                     else
-                        unlines $ map unescape $ prettyOutput currTime loadedCount (limitMessages ordMessages) evals
+                        unlines $ map unescape $  outputfile_header : prettyOutput currTime loadedCount (limitMessages ordMessages) evals
             when (null loaded && not ignoreLoaded) $ do
                 putStrLn "No files loaded, nothing to wait for. Fix the last error and restart."
                 exitFailure
